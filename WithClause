@@ -1,0 +1,47 @@
+select * from salaries;
+
+-- with [new table name] then () [your normal query] from the normal table
+with average_salary (avg_sal) as (select avg(salary) from salaries)
+select * from salaries s , average_salary av
+where s.salary > av.avg_sal;
+
+-- Find the emp_no who's salary were better than the average salaryies across all employees
+-- 1) Total salary for each employee -- Total_salary
+select emp_no, sum(salary) from salaries
+group by emp_no;
+
+-- 2) Find the averga salaries with respect to all the employees - avg_salary 
+select avg(total_sal_per_emp) avg_sal_all_emp
+from
+(select s.emp_no, sum(salary) as total_sal_per_emp 
+from salaries s
+group by emp_no) x;
+
+-- 3) find the emp_no where the Total_salary > Avg_salary of all employees
+select * from
+		(select s.emp_no, sum(salary) as total_sal_per_emp 
+		from salaries s
+		group by emp_no) total_salaries
+	join
+		(select avg(total_sal_per_emp) avg_sal_all_emp
+		from
+		(select s.emp_no, sum(salary) as total_sal_per_emp 
+		from salaries s
+		group by emp_no) x) avg_sal
+        on total_salaries.total_sal_per_emp > avg_sal.avg_sal_all_emp;
+        
+        
+-- now use the With Clause
+
+with Total_salaries (emp_no, total_sal_per_emp) as
+	(select emp_no, sum(salary) total_sal_per_emp from salaries
+	group by emp_no),
+    avg_salaries (avg_sal_all_emp) as 
+		(select avg(total_sal_per_emp) avg_sal_all_emp
+			from Total_salaries)
+select *
+from Total_salaries ts
+join avg_salaries avs 
+on ts.total_sal_per_emp > avs.avg_sal_all_emp;
+
+
